@@ -1,0 +1,27 @@
+receivers:
+  prometheus:
+    target_allocator:
+    config:
+      scrape_configs:
+        - job_name: "netdata"
+          scrape_interval: 5s
+          metrics_path: "/api/v1/allmetrics"
+          params:
+            format: [prometheus]
+          honor_labels: true
+          static_configs:
+            - targets: ["netdata:19999"]
+
+exporters:
+  logging:
+
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    const_labels:
+      label1: value1
+
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      exporters: [logging, prometheus]
