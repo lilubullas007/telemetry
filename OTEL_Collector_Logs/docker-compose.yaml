@@ -1,0 +1,64 @@
+version: '2.1'
+services:
+  # apache:
+  #   image: httpd
+  #   container_name: apache
+  #   depends_on: 
+  #     - logstash
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./website:/usr/local/apache2/htdocs
+  #   logging:
+  #     driver: gelf
+  #     options:
+  #       gelf-address: "udp://logstash:12201"
+  #       tag: "apache"
+  #   networks:
+  #     - elk
+
+  logstash:
+    image: logstash:7.11.2
+    container_name: logstash
+    restart: always
+    volumes:
+      - ./logstash-agent:/etc/logstash
+    command: logstash -f /etc/logstash/logstash.conf
+    depends_on:
+      - elasticsearch
+    ports:
+      - "9600:9600"
+      - "12201:12201"
+    networks:
+      - elk
+
+  elasticsearch:
+    image: elasticsearch:7.11.2
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - ./elasticsearch_data/:/usr/share/elasticsearch/data
+    mem_limit: "1g"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk
+
+  kibana:
+    image: kibana:7.11.2
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+networks:
+  elk:
