@@ -97,7 +97,7 @@
                         "uid": "P1809F7CD0C75ACF3"
                     },
                     "editorMode": "code",
-                    "expr": "avg(node_memory_MemAvailable_bytes{job=\"node-exporter\"}) / avg(node_memory_MemTotal_bytes{job=\"node-exporter\"}) * 100",
+                    "expr": "avg(node_memory_MemAvailable_bytes) / avg(node_memory_MemTotal_bytes) * 100",
                     "format": "time_series",
                     "interval": "10s",
                     "intervalFactor": 1,
@@ -344,7 +344,7 @@
                         "uid": "P1809F7CD0C75ACF3"
                     },
                     "editorMode": "code",
-                    "expr": "avg(node_memory_MemAvailable_bytes{job=\"node-exporter\"})",
+                    "expr": "avg(node_memory_MemAvailable_bytes)",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "range": true,
@@ -424,7 +424,7 @@
                         "uid": "P1809F7CD0C75ACF3"
                     },
                     "editorMode": "code",
-                    "expr": "avg(node_memory_MemTotal_bytes{job=\"node-exporter\"})",
+                    "expr": "avg(node_memory_MemTotal_bytes)",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "range": true,
