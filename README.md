@@ -20,8 +20,13 @@ You can import dashboards in grafana. Once you log in as admin, with password ad
 ### Generating load
 To check that the metrics and the dashboard update with changes, I've prepared a little test, in order to run it you should: ```make run-php``` and ```make run-load```. After waiting a couple of minutes you will see the changes.
 
+Once you don't need to use this anymore you can use CTLR + C to stop the run-load and ```make delete-php``` to delete the deployment and service.
+
 ### Asking prometheus for metrics
 I have a python script, to run it you need to change the IP:PORT to the Prometheus service. ```python api/orchestrator.py```
 
 ### Prometheus rules
 The rules are defined in kubernetes-prometheus/config-map.yaml in the prometheus-rules section. In order to connect the alerting with the alert manager you have to set the port in the alerting section in that same file.
+
+## Stopping the demo
+With ```make delete``` to delete all the deployments, services... and ```make stop``` to stop minikube the demo should finish.
