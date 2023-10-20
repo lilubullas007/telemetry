@@ -1,8 +1,8 @@
-# Monitoring
-This repository will host the monitoring aspect of this project.
+# Telemetry
+This repository will host the telemetry aspect of this project.
 
-- [Monitoring](#monitoring)
-  - [What is Monitoring?](#what-is-monitoring)
+- [Telemetry](#telemetry)
+  - [Relevant concepts](#relevant-concepts)
   - [Telemetry in FluidOS](#telemetry-in-fluidos)
   - [Tools used in the project](#tools-used-in-the-project)
   - [Overview of the deployment](#overview-of-the-deployment)
@@ -17,7 +17,7 @@ This repository will host the monitoring aspect of this project.
     - [Prometheus rules](#prometheus-rules)
     - [Stopping the demo](#stopping-the-demo)
 
-## What is Monitoring?
+## Relevant concepts
 Is related to observability and telemetry.
 - Observability lets us understand a system from the outside, by letting us ask questions about that system without knowing its inner workings. Furthermore, it allows us to easily troubleshoot and handle novel problems, and helps us answer the question, "Why is this happening?"
 - Telemetry, on the other hand, is the process of gathering, measuring, and transmitting data about the performance, status, and behavior of a system or a device in real-time. This data can include metrics like CPU, memory, storage, or network traffic.
@@ -25,7 +25,7 @@ Is related to observability and telemetry.
 Monitoring is the process by which the infrastructure is constantly checked for problems. Thanks to monitoring, the system administrators con make a better use of the technological resources, they can know the needs of the our infrastructure and anticipate to them. Finally, since the sysadmins will know the normal state of the infrastructure, they can easily detect threats and anomalies.
 
 ## Telemetry in FluidOS
-To make a more understable monitoring, the following methods will be used:
+To make a more understable telemetry, the following methods will be used:
 - Alerts: whenever abnormal values are detected, the system should create notifications for prompt action.
 - Dashboards: utilizing visualization tools, administrators can quickly access real-time updates on system activies.
 
