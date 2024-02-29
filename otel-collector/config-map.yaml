@@ -9,12 +9,35 @@ data:
       prometheus:
         config:
           scrape_configs:
+            - job_name: "prometheus"
+              scrape_interval: 10s
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels:
+                    [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                  regex: "true"
+                  action: keep
+                - source_labels:
+                    [
+                      __address__,
+                      __meta_kubernetes_pod_annotation_prometheus_io_port,
+                    ]
+                  action: replace
+                  target_label: __address__
+                  regex: ([^:]+)(?::\d+)?;(\d+)
+                  replacement: $$1:$$2
+            - job_name: "otel-collector"
+              scrape_interval: 10s
+              static_configs:
+                - targets: ["opentelemetrycollector.monitoring.svc.cluster.local:8090"]
+            # Scrape cAdvisor metrics
             - job_name: "kube-state-metrics"
               params:
                 format: [prometheus]
               honor_labels: true
               static_configs:
-                - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080'] 
+                - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
             - job_name: 'node-exporter'
               kubernetes_sd_configs:
                 - role: endpoints
@@ -22,6 +45,149 @@ data:
               - source_labels: [__meta_kubernetes_endpoints_name]
                 regex: 'node-exporter'
                 action: keep 
+            - job_name: integrations/kubernetes/cadvisor
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              kubernetes_sd_configs:
+                  - role: node
+              relabel_configs:
+                  - replacement: kubernetes.default.svc.cluster.local:443
+                    target_label: __address__
+                  - regex: (.+)
+                    replacement: /api/v1/nodes/$${1}/proxy/metrics/cadvisor
+                    source_labels:
+                      - __meta_kubernetes_node_name
+                    target_label: __metrics_path__
+              scheme: https
+              tls_config:
+                  ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  insecure_skip_verify: false
+                  server_name: kubernetes
+            - job_name: integrations/kubernetes/kubelet
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              kubernetes_sd_configs:
+                  - role: node
+              relabel_configs:
+                  - replacement: kubernetes.default.svc.cluster.local:443
+                    target_label: __address__
+                  - regex: (.+)
+                    replacement: /api/v1/nodes/$${1}/proxy/metrics
+                    source_labels:
+                      - __meta_kubernetes_node_name
+                    target_label: __metrics_path__
+              scheme: https
+              tls_config:
+                  ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  insecure_skip_verify: false
+                  server_name: kubernetes
+            # Scrape config for API servers
+            - job_name: "kubernetes-apiservers"
+              kubernetes_sd_configs:
+                - role: endpoints
+              scheme: https
+              tls_config:
+                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                insecure_skip_verify: true
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+                action: keep
+                regex: default;kubernetes;https
+            - job_name: 'kubernetes-nodes'
+              scheme: https
+              tls_config:
+                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              kubernetes_sd_configs:
+              - role: node
+              relabel_configs:
+              - action: labelmap
+                regex: __meta_kubernetes_node_label_(.+)
+              - target_label: __address__
+                replacement: kubernetes.default.svc:443
+              - source_labels: [__meta_kubernetes_node_name]
+                regex: (.+)
+                target_label: __metrics_path__
+                replacement: /api/v1/nodes/$${1}/proxy/metrics
+            - job_name: 'kubernetes-pods'
+              kubernetes_sd_configs:
+              - role: pod
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: keep
+                regex: true
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                action: replace
+                target_label: __metrics_path__
+                regex: (.+)
+              - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                action: replace
+                regex: ([^:]+)(?::\d+)?;(\d+)
+                replacement: $$1:$$2
+                target_label: __address__
+              - action: labelmap
+                regex: __meta_kubernetes_pod_label_(.+)
+              - source_labels: [__meta_kubernetes_namespace]
+                action: replace
+                target_label: kubernetes_namespace
+              - source_labels: [__meta_kubernetes_pod_name]
+                action: replace
+                target_label: kubernetes_pod_name
+            - job_name: 'kubernetes-service-endpoints'
+              kubernetes_sd_configs:
+              - role: endpoints
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+                action: keep
+                regex: true
+              - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+                action: replace
+                target_label: __scheme__
+                regex: (https?)
+              - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+                action: replace
+                target_label: __metrics_path__
+                regex: (.+)
+              - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+                action: replace
+                target_label: __address__
+                regex: ([^:]+)(?::\d+)?;(\d+)
+                replacement: $$1:$$2
+              - action: labelmap
+                regex: __meta_kubernetes_service_label_(.+)
+              - source_labels: [__meta_kubernetes_namespace]
+                action: replace
+                target_label: kubernetes_namespace
+              - source_labels: [__meta_kubernetes_service_name]
+                action: replace
+                target_label: kubernetes_name
+      prometheus/remote:
+        config:
+          scrape_configs:
+            - job_name: integrations/kubernetes/cadvisor
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              kubernetes_sd_configs:
+                  - role: node
+              relabel_configs:
+                - replacement: kubernetes.default.svc.cluster.local:443
+                  target_label: __address__
+                - regex: (.+)
+                  replacement: /api/v1/nodes/$${1}/proxy/metrics/cadvisor
+                  source_labels:
+                    - __meta_kubernetes_node_name
+                  target_label: __metrics_path__
+                - action: replace
+                  regex: ^(.*)$
+                  target_label: nginx
+                  replacement: $$1
+              metric_relabel_configs:
+                - action: keep
+                  source_labels: [namespace]
+                  regex: nginx
+              scheme: https
+              tls_config:
+                  ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  insecure_skip_verify: false
+                  server_name: kubernetes
 
     processors:
       batch:
@@ -31,6 +197,10 @@ data:
     exporters:
       prometheus:
         endpoint: ":8090"
+      prometheuswrite:
+        endpoint: "http://prometheus-service.monitoring.svc.cluster.local:8080/api/v1/write"
+      prometheusremotewrite/remote:
+        endpoint: "http://10.208.99.106:30000/api/v1/write"
       logging:
         loglevel: debug
 
@@ -39,4 +209,8 @@ data:
         metrics:
           receivers: [prometheus]
           processors: [batch]
-          exporters: [prometheus, logging]
+          exporters: [prometheus,prometheuswrite,logging]
+        metrics/2:
+          receivers: [prometheus/remote]
+          processors: [batch]
+          exporters: [prometheusremotewrite/remote]
