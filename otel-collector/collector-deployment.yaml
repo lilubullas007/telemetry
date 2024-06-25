@@ -14,11 +14,12 @@ spec:
       labels:
         app.kubernetes.io/name: opentelemetrycollector
     spec:
+      serviceAccountName: opentelemetrycollector
       containers:
-        - name: otelcol
+        - name: opentelemetrycollector
           args:
             - --config=/conf/collector.yaml
-          image: otel/opentelemetry-collector:0.47.0
+          image: otel/opentelemetry-collector-contrib:0.96.0
           volumeMounts:
             - mountPath: /conf
               name: collector-config
