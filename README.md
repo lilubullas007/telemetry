@@ -122,3 +122,10 @@ The rules are already defined in kubernetes-prometheus/config-map.yaml in the pr
 
 ### Stopping the demo
 Using ```make delete``` will delete all the deployments, services... and ```make stop``` will stop minikube.
+
+## How to send custom metrics
+
+In the forlder example-api you can find different ways to send metrics: via http, grpc and with a simple file (batter_metrics.prom). If the file is stored in 
+/var/lib/node_exporter/textfile_collector/*.prom, node-exporter will take those metrics and send them to the OTEL-COLLECTOR.
+
+Take into account that the COLLECTOR (OpenTelemetry) ENDPOINT its the IP:30807. The port is booked using NodePort.
