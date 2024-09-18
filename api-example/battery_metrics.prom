@@ -1,0 +1,35 @@
+# HELP battery_percentage Current battery level as a percentage.
+# TYPE battery_percentage gauge
+battery_percentage{device="battery0"} 85.0
+
+# HELP battery_power_draw_watts Current power draw of the battery in watts.
+# TYPE battery_power_draw_watts gauge
+battery_power_draw_watts{device="battery0"} 12.5
+
+# HELP battery_charge_rate_watts Rate at which the battery is charging in watts.
+# TYPE battery_charge_rate_watts gauge
+battery_charge_rate_watts{device="battery0"} 20.0
+
+# HELP battery_discharge_rate_watts Rate at which the battery is discharging in watts.
+# TYPE battery_discharge_rate_watts gauge
+battery_discharge_rate_watts{device="battery0"} 5.0
+
+# HELP battery_health_percent Current health of the battery as a percentage.
+# TYPE battery_health_percent gauge
+battery_health_percent{device="battery0"} 95.0
+
+# HELP battery_voltage_volts Current voltage of the battery in volts.
+# TYPE battery_voltage_volts gauge
+battery_voltage_volts{device="battery0"} 3.7
+
+# HELP battery_temperature_celsius Current temperature of the battery in Celsius.
+# TYPE battery_temperature_celsius gauge
+battery_temperature_celsius{device="battery0"} 32.0
+
+# HELP battery_remaining_time_seconds Estimated remaining time of battery usage in seconds.
+# TYPE battery_remaining_time_seconds gauge
+battery_remaining_time_seconds{device="battery0"} 7200
+
+# HELP battery_cycle_count Total number of charge cycles the battery has undergone.
+# TYPE battery_cycle_count counter
+battery_cycle_count{device="battery0"} 150

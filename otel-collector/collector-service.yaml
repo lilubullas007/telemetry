@@ -9,6 +9,7 @@ spec:
       port: 4317
       protocol: TCP
       targetPort: 4317
+      nodePort: 30807
     - name: metrics
       port: 8090
       protocol: TCP

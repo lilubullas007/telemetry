@@ -25,6 +25,7 @@ spec:
         - --no-collector.hwmon
         - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/pods/.+)($|/)
         - --collector.netclass.ignored-devices=^(veth.*)$
+        - --collector.textfile.directory=/var/lib/node_exporter/textfile_collector/
         name: node-exporter
         image: prom/node-exporter
         ports:
@@ -46,6 +47,9 @@ spec:
           mountPropagation: HostToContainer
           name: root
           readOnly: true
+        - mountPath: /var/lib/node_exporter/textfile_collector  # Mount the host directory
+          name: textfile-collector
+          readOnly: true
       volumes:
       - hostPath:
           path: /sys
@@ -53,3 +57,7 @@ spec:
       - hostPath:
           path: /
         name: root
+      - hostPath:  # Define the volume for textfile collector
+          path: /var/lib/node_exporter/textfile_collector
+          type: DirectoryOrCreate  # Ensures the directory is created if it does not exist
+        name: textfile-collector

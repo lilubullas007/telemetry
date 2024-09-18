@@ -34,7 +34,7 @@ data:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
-            # max_recv_msg_size_mib: 4
+            max_recv_msg_size_mib: 4
           http:
             endpoint: 0.0.0.0:8090
       prometheus:
@@ -58,10 +58,10 @@ data:
                   target_label: __address__
                   regex: ([^:]+)(?::\d+)?;(\d+)
                   replacement: $$1:$$2
-            # - job_name: "otel-collector"
-            #   scrape_interval: 10s
-            #   static_configs:
-            #     - targets: ["opentelemetrycollector.monitoring.svc.cluster.local:8090"]
+            - job_name: "otel-collector"
+              scrape_interval: 10s
+              static_configs:
+                - targets: ["opentelemetrycollector.monitoring.svc.cluster.local:8090"]
             # Scrape cAdvisor metrics
             - job_name: "kube-state-metrics"
               params:
@@ -207,17 +207,19 @@ data:
                   target_label: __metrics_path__
                 - action: replace
                   regex: ^(.*)$
-                  target_label: app
+                  target_label: nginx
                   replacement: $$1
               metric_relabel_configs:
                 - action: keep
                   source_labels: [namespace]
-                  regex: nginx-liqo-local-1ca43e
+                  regex: nginx
               scheme: https
               tls_config:
                   ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   insecure_skip_verify: false
                   server_name: kubernetes
+
+
     processors:
       filter:
         metrics:
@@ -225,12 +227,6 @@ data:
             match_type: regexp
             metric_names:
               - "duplicated_metric_name_regex"
-      filter/fluidos:
-        metrics:
-          include:
-            match_type: regexp
-            metric_names:
-              - ".*fluidos.*"
       resourcedetection/system:
         detectors: [env, system, gcp, eks]
         timeout: 2s
@@ -239,10 +235,10 @@ data:
         attributes:
           - action: insert
             key: domain
-            value: 'IBM'
+            value: 'cloud'
           - action: insert
             key: cluster
-            value: liqo-Ireland     
+            value: liqo-italy      
           - action: insert
             key: job
             value: 'integrations/kubernetes/eventhandler'
@@ -253,18 +249,18 @@ data:
         actions:
           - action: insert
             key: domain
-            value: IBM
+            value: cloud
           - action: insert
             key: cluster
-            value: liqo-Ireland                  
+            value: liqo-italy                     
       resource:
         attributes:
           - action: insert
             key: domain
-            value: IBM
+            value: cloud
           - action: insert
             key: cluster
-            value: liqo-Ireland
+            value: liqo-italy
           - action: insert
             from_attribute: k8s.pod.uid
             key: service.instance.id
@@ -317,44 +313,30 @@ data:
         - sources:
           - from: resource_attribute
             name: k8s.pod.name
+
     exporters:
       prometheusremotewrite:
         endpoint: "http://prometheus-service.monitoring.svc.cluster.local:8080/api/v1/write"
       prometheusremotewrite/remote:
         endpoint: "http://10.208.99.106:30000/api/v1/write"
-        timeout: 120s
-        tls:
-          insecure_skip_verify: true
-        resource_to_telemetry_conversion:
-          enabled: true
-        remote_write_queue:
-          enabled: true
-          queue_size: 100000
-          num_consumers: 50
-        retry_on_failure:
-          enabled: true
-          initial_interval: 5s
-          max_interval: 30s
-          max_elapsed_time: 300s
       logging:
-        verbosity: detailed 
-        #loglevel: debug
-    extensions:
-      health_check: {}
-      memory_ballast:
-        size_mib: 683
+        loglevel: debug
+
     service:
-      extensions: [memory_ballast, health_check]
+      telemetry:
+        metrics:
+          address: opentelemetrycollector.monitoring.svc.cluster.local:8090
+
       pipelines:
+        logs/k8s_events:
+          receivers: [k8s_events]
+          processors: [batch, resource/k8s_events, resourcedetection/system]
+          exporters: [null]
         metrics:
           receivers: [kubeletstats, prometheus, otlp, k8s_cluster, hostmetrics]
           processors: [attributes/metrics, k8sattributes, resource, batch]
-          exporters: [prometheusremotewrite]
+          exporters: [prometheusremotewrite, logging]
         metrics/2:
           receivers: [prometheus/remote]
           processors: [attributes/metrics, k8sattributes, resource, batch]
           exporters: [prometheusremotewrite/remote]
-        metrics/fluidosmonitoring:
-          receivers: [otlp]
-          processors: [attributes/metrics, k8sattributes, resource, batch]
-          exporters: [prometheusremotewrite/remote, logging]
