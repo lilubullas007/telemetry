@@ -15,7 +15,7 @@ data:
       kubeletstats:
         collection_interval: 20s
         auth_type: "serviceAccount"
-        endpoint: https://10.208.99.108:10250
+        endpoint: https://10.208.99.106:10250
         insecure_skip_verify: true
         metric_groups:
           - container
@@ -200,34 +200,8 @@ data:
               - source_labels: [__meta_kubernetes_service_name]
                 action: replace
                 target_label: kubernetes_name
-      prometheus/remote:
-        config:
-          scrape_configs:
-            - job_name: integrations/kubernetes/cadvisor
-              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              kubernetes_sd_configs:
-                  - role: node
-              relabel_configs:
-                - replacement: kubernetes.default.svc.cluster.local:443
-                  target_label: __address__
-                - regex: (.+)
-                  replacement: /api/v1/nodes/$${1}/proxy/metrics/cadvisor
-                  source_labels:
-                    - __meta_kubernetes_node_name
-                  target_label: __metrics_path__
-                - action: replace
-                  regex: ^(.*)$
-                  target_label: app
-                  replacement: $$1
-              metric_relabel_configs:
-                - action: keep
-                  source_labels: [namespace]
-                  regex: nginx-liqo-local-1ca43e
-              scheme: https
-              tls_config:
-                  ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-                  insecure_skip_verify: false
-                  server_name: kubernetes
+
+
     processors:
       attributes/nodename:
         actions:
@@ -240,12 +214,6 @@ data:
             match_type: regexp
             metric_names:
               - "duplicated_metric_name_regex"
-      filter/fluidos:
-        metrics:
-          include:
-            match_type: regexp
-            metric_names:
-              - ".*fluidos.*"
       resourcedetection/system:
         detectors: [env, system, gcp, eks]
         timeout: 2s
@@ -254,38 +222,32 @@ data:
         attributes:
           - action: insert
             key: domain
-            value: 'IBM'
+            value: 'UMU'
           - action: insert
             key: cluster
-            value: liqo-Ireland     
+            value: liqo-Spain      
           - action: insert
             key: job
             value: 'integrations/kubernetes/eventhandler'
           - action: insert
             key: loki.resource.labels
             value: pod, namespace, container, cluster, filename
-          - action: insert
-            key: node.name
-            from_attribute: k8s.node.name 
       attributes/metrics:
         actions:
           - action: insert
             key: domain
-            value: IBM
+            value: UMU
           - action: insert
             key: cluster
-            value: liqo-Ireland    
-          - action: insert
-            key: node.name
-            from_attribute: k8s.node.name               
+            value: liqo-Spain                     
       resource:
         attributes:
           - action: insert
             key: domain
-            value: IBM
+            value: UMU
           - action: insert
             key: cluster
-            value: liqo-Ireland
+            value: liqo-Spain
           - action: insert
             from_attribute: k8s.pod.uid
             key: service.instance.id
@@ -344,28 +306,19 @@ data:
     exporters:
       prometheusremotewrite:
         endpoint: "http://prometheus-service.monitoring.svc.cluster.local:8080/api/v1/write"
-      prometheusremotewrite/remote:
-        endpoint: "http://10.208.99.106:30000/api/v1/write"
       logging:
-        verbosity: detailed 
-        #loglevel: debug
+        loglevel: debug
+
+
     extensions:
       health_check: {}
       memory_ballast:
         size_mib: 683
+
     service:
       extensions: [memory_ballast, health_check]
-      
       pipelines:
         metrics:
           receivers: [kubeletstats, prometheus, otlp, k8s_cluster, hostmetrics]
-          processors: [attributes/metrics, attributes/nodename, k8sattributes, resource, batch]
-          exporters: [prometheusremotewrite]
-        metrics/2:
-          receivers: [prometheus/remote]
           processors: [attributes/metrics, k8sattributes, resource, batch]
-          exporters: [prometheusremotewrite/remote]
-        metrics/fluidosmonitoring:
-          receivers: [otlp]
-          processors: [attributes/metrics, k8sattributes, resource, batch]
-          exporters: [prometheusremotewrite/remote, logging]
+          exporters: [prometheusremotewrite, logging]
