@@ -17,12 +17,16 @@ spec:
         app.kubernetes.io/component: exporter
         app.kubernetes.io/name: node-exporter
     spec:
+      hostNetwork: true
+      hostPID: true
       containers:
       - args:
         - --path.sysfs=/host/sys
         - --path.rootfs=/host/root
         - --no-collector.wifi
         - --no-collector.hwmon
+        - --collector.netdev
+        - --collector.netclass
         - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/pods/.+)($|/)
         - --collector.netclass.ignored-devices=^(veth.*)$
         - --collector.textfile.directory=/var/lib/node_exporter/textfile_collector/

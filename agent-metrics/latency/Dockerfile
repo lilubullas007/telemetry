@@ -20,7 +20,7 @@ COPY . .
 ENV SOURCE_IP="10.208.99.108"
 ENV COLLECTOR_ENDPOINT="http://10.208.99.108:30807"
 ENV CLUSTER="IBM"
-ENV INTERVAL_MS="3000"
+ENV INTERVAL_MS="30000"
 
 # Expon el puerto en el que la aplicación se ejecutará
 EXPOSE 8000

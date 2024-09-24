@@ -5,6 +5,11 @@ BASE_URL = "http://127.0.0.1:8000"
 
 # Test data for adding a cluster
 test_cluster = {"domain": "UMU", "cluster": "UMU", "node_ip": "10.208.99.106"}
+test_cluster_2 = {"domain": "UMU", "cluster": "UMU", "node_ip": "10.208.99.114"}
+
+def test_add_cluster_2():
+    response = requests.post(f"{BASE_URL}/cluster/", json=test_cluster_2)
+    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
 
 def test_add_cluster():
     response = requests.post(f"{BASE_URL}/cluster/", json=test_cluster)
@@ -31,9 +36,9 @@ def test_list_clusters_after_delete():
 
 if __name__ == "__main__":
     # Run the tests
-    test_add_cluster()
+    test_add_cluster_2()
     test_list_clusters_after_add()
-    test_delete_cluster()
-    test_list_clusters_after_delete()
+    # test_delete_cluster()
+    # test_list_clusters_after_delete()
 
     print("All tests passed successfully!")
