@@ -17,6 +17,36 @@ data:
           severity: slack
         annotations:
           summary: High Memory Usage
+
+    - name: critical alert
+      rules:
+      - alert: High Node CPU Usage
+        expr: avg by (instance) (rate(container_cpu_usage_seconds_total[3m])) > 0.7
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU usage of {{ $labels.instance }} is high"
+          description: "CPU utilization above 70% for 3 minutes in the instance {{ $labels.instance }}."
+
+      - alert: High Container CPU Usage
+        expr: rate(container_cpu_usage_seconds_total[1m]) > 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU usage of {{ $labels.container }} is high"
+          description: "CPU utilization above 50% for 1 minute in container {{ $labels.container }}."
+
+      - alert: High Container Memory Usage
+        expr: container_memory_usage_bytes > 1073741824
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage of {{ $labels.container }} is high"
+          description: "Memory usage greater than 1GB for 2 minutes in container {{ $labels.container }}."
+
   prometheus.yml: |-
     global:
       scrape_interval: 1d

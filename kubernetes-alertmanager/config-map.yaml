@@ -20,6 +20,12 @@ data:
             severity: slack
           group_wait: 10s
           repeat_interval: 1m
+
+        - receiver: orchestrator_webhook
+          match:
+            severity: critical
+          group_wait: 10s
+          repeat_interval: 1m
  
     receivers:
     - name: alert-emailer
@@ -33,3 +39,8 @@ data:
       slack_configs:
       - api_url: https://hooks.slack.com/services/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sz4Qk
         channel: '#devopscube-demo'
+    - name: orchestrator_webhook
+      webhook_configs:
+      - url: 'http://localhost:8080/alert'
+      # - url: 'http://orchestrator-service.namespace.svc:8080/alert'
+        send_resolved: true
