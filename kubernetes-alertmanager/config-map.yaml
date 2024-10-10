@@ -41,6 +41,6 @@ data:
         channel: '#devopscube-demo'
     - name: orchestrator_webhook
       webhook_configs:
-      - url: 'http://localhost:8080/alert'
-      # - url: 'http://orchestrator-service.namespace.svc:8080/alert'
+      - url: 'http://192.168.49.1:8080/alert'
+      # - url: http://orchestrator-service.namespace.svc:8080/alert
         send_resolved: true

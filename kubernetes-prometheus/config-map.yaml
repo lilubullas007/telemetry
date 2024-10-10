@@ -21,31 +21,31 @@ data:
     - name: critical alert
       rules:
       - alert: High Node CPU Usage
-        expr: avg by (instance) (rate(container_cpu_usage_seconds_total[3m])) > 0.7
+        expr: avg by (instance) (rate(container_cpu_usage_seconds_total[3m])) > 0.005
         for: 3m
         labels:
           severity: critical
         annotations:
-          summary: "CPU usage of {{ $labels.instance }} is high"
-          description: "CPU utilization above 70% for 3 minutes in the instance {{ $labels.instance }}."
+          summary: "CPU usage is high in one node"
+          description: "CPU usage is above 70% for more than 3 minutes."
 
-      - alert: High Container CPU Usage
-        expr: rate(container_cpu_usage_seconds_total[1m]) > 0.5
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "CPU usage of {{ $labels.container }} is high"
-          description: "CPU utilization above 50% for 1 minute in container {{ $labels.container }}."
-
-      - alert: High Container Memory Usage
-        expr: container_memory_usage_bytes > 1073741824
+      - alert: High Containers CPU Usage
+        expr: (sum(rate(container_cpu_usage_seconds_total[2m])) / avg(machine_cpu_cores) * 100) > 5
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "Memory usage of {{ $labels.container }} is high"
-          description: "Memory usage greater than 1GB for 2 minutes in container {{ $labels.container }}."
+          summary: "Containers CPU usage is high"
+          description: "The CPU usage across containers is above 80% of the total available CPU cores for more than 1 minute. This could indicate that the containers are consuming excessive CPU resources."
+
+      - alert: High Container Memory Usage
+        expr: container_memory_usage_bytes > 500000000
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage is high"
+          description: "Memory usage greater than 1GB for 2 minutes."
 
   prometheus.yml: |-
     global:
