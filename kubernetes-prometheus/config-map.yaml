@@ -21,16 +21,16 @@ data:
     - name: critical alert
       rules:
       - alert: High Node CPU Usage
-        expr: avg by (instance) (rate(container_cpu_usage_seconds_total[3m])) > 0.005
+        expr: avg by (instance) (rate(container_cpu_usage_seconds_total[3m])) > 0.7
         for: 3m
         labels:
           severity: critical
         annotations:
-          summary: "CPU usage is high in one node"
+          summary: "CPU usage is high"
           description: "CPU usage is above 70% for more than 3 minutes."
 
       - alert: High Containers CPU Usage
-        expr: (sum(rate(container_cpu_usage_seconds_total[2m])) / avg(machine_cpu_cores) * 100) > 5
+        expr: (sum(rate(container_cpu_usage_seconds_total[2m])) / avg(machine_cpu_cores) * 100) > 80
         for: 2m
         labels:
           severity: critical
@@ -39,7 +39,7 @@ data:
           description: "The CPU usage across containers is above 80% of the total available CPU cores for more than 1 minute. This could indicate that the containers are consuming excessive CPU resources."
 
       - alert: High Container Memory Usage
-        expr: container_memory_usage_bytes > 500000000
+        expr: container_memory_usage_bytes > 1000000000
         for: 2m
         labels:
           severity: critical

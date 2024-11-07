@@ -1,29 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: opentelemetrycollector
+  name: config-reloader
   namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: opentelemetrycollector
+      app: config-reloader
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: opentelemetrycollector
+        app: config-reloader
     spec:
       serviceAccountName: opentelemetrycollector
       containers:
-        - name: opentelemetrycollector
-          args:
-            - --config=/conf/collector.yaml
-          image: otel/opentelemetry-collector-contrib:0.96.0
-          volumeMounts:
-            - mountPath: /conf
-              name: collector-config
         - name: config-reloader
-          image: bitnami/kubectl:latest
+          image: config-reloader-image:latest
+          imagePullPolicy: Never
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -34,9 +28,7 @@ spec:
 
                 echo "Current Version: $CURRENT_VERSION, Previous Version: $PREVIOUS_VERSION"
 
-                # Verify if it's the first execution
                 if [ -z "$PREVIOUS_VERSION" ]; then
-                  # Store version without sending SIGHUP
                   echo "Storing initial version without sending SIGHUP."
                   echo "$CURRENT_VERSION" > /tmp/collector-config-version
                 elif [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
@@ -44,17 +36,13 @@ spec:
                   echo "Updating collector config..."
                   echo "$CURRENT_VERSION" > /tmp/collector-config-version
 
-                  # Hacer una solicitud HTTP POST a la API externa
                   echo "Notifying external API to send SIGHUP..."
-                  # /mnt/curl-amd64 -X POST http://host.minikube.internal:8081/reload
+                  curl -X POST http://host.minikube.internal:8081/reload
                 fi
               done
           volumeMounts:
             - mountPath: /tmp
-              name: version-storage # emptyDir for the version file
+              name: version-storage
       volumes:
-        - name: collector-config
-          configMap:
-            name: collector-config
         - name: version-storage
           emptyDir: {}
