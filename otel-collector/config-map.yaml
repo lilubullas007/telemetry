@@ -240,6 +240,9 @@ data:
           - action: insert
             key: cluster
             value: liqo-Spain                     
+          - action: insert
+            key: source
+            value: opentelemetry
       resource:
         attributes:
           - action: insert

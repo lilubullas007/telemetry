@@ -17,7 +17,7 @@ spec:
       containers:
         - name: config-reloader
           image: config-reloader-image:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           command: ["/bin/bash", "-c"]
           args:
             - |

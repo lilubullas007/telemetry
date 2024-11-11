@@ -22,39 +22,10 @@ spec:
           volumeMounts:
             - mountPath: /conf
               name: collector-config
-        - name: config-reloader
-          image: bitnami/kubectl:latest
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              while true; do
-                sleep 10;
-                CURRENT_VERSION="$(kubectl get configmap collector-config -n monitoring -o jsonpath='{.metadata.resourceVersion}')"
-                PREVIOUS_VERSION="$(cat /tmp/collector-config-version 2>/dev/null)"
-
-                echo "Current Version: $CURRENT_VERSION, Previous Version: $PREVIOUS_VERSION"
-
-                # Verify if it's the first execution
-                if [ -z "$PREVIOUS_VERSION" ]; then
-                  # Store version without sending SIGHUP
-                  echo "Storing initial version without sending SIGHUP."
-                  echo "$CURRENT_VERSION" > /tmp/collector-config-version
-                elif [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-                  echo "Detected change in ConfigMap..."
-                  echo "Updating collector config..."
-                  echo "$CURRENT_VERSION" > /tmp/collector-config-version
-
-                  # Hacer una solicitud HTTP POST a la API externa
-                  echo "Notifying external API to send SIGHUP..."
-                  # /mnt/curl-amd64 -X POST http://host.minikube.internal:8081/reload
-                fi
-              done
-          volumeMounts:
-            - mountPath: /tmp
-              name: version-storage # emptyDir for the version file
       volumes:
-        - name: collector-config
-          configMap:
+        - configMap:
+            items:
+              - key: collector.yaml
+                path: collector.yaml
             name: collector-config
-        - name: version-storage
-          emptyDir: {}
+          name: collector-config
