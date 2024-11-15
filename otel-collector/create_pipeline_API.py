@@ -29,7 +29,7 @@ def update_configmap(namespace: str, configmap_name: str, new_data: dict):
     configmap = v1.read_namespaced_config_map(configmap_name, namespace)
     configmap_yaml = yaml.safe_load(configmap.data['collector.yaml'])
 
-    print(configmap_yaml)
+    # print(configmap_yaml)
 
     # Update processors, exporters and pipelines
     domainID = new_data["domainID"]
@@ -71,7 +71,7 @@ def update_configmap(namespace: str, configmap_name: str, new_data: dict):
     # Convert to YAML
     updated_yaml = yaml.safe_dump(configmap_yaml)
 
-    print(updated_yaml)
+    # print(updated_yaml)
 
     # Update opentelemetrycollector ConfigMap
     configmap.data['collector.yaml'] = updated_yaml
