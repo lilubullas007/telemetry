@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import yaml
 from kubernetes import client, config
+import subprocess
+import uvicorn
 
 # FastAPI
 app = FastAPI()
@@ -91,3 +93,40 @@ def add_pipeline(request: PipelineRequest):
         return {"message": "Pipeline created and ConfigMap successfully updated.\n"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint for (hot-)reloading the OpenTelemetry Collector
+@app.post("/reload")
+def reload_config():
+    # Command to get the OpenTelemetry pod name
+    get_pod_name_cmd = [
+        "kubectl", "get", "pods", "-n", "monitoring", 
+        "-l", "app.kubernetes.io/name=opentelemetrycollector", 
+        "-o", "jsonpath={.items[0].metadata.name}"
+    ]
+
+    try:
+        # Get the OpenTelemetry pod name
+        pod_name = subprocess.check_output(get_pod_name_cmd, text=True).strip()
+
+        if not pod_name:
+            raise HTTPException(status_code=404, detail="OpenTelemetry pod not found")
+
+        # Command to send the SIGHUP signal
+        reload_cmd = [
+            "kubectl", "debug", "-it", pod_name, "-n", "monitoring",
+            "--image=busybox", "--target=opentelemetrycollector", 
+            "--", "/bin/sh", "-c", "kill -HUP 1"
+        ]
+
+        # Execute the reload command
+        subprocess.run(reload_cmd, check=True)
+
+        return {"message": "SIGHUP sent to OpenTelemetry Collector", "pod": pod_name}
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reload configuration: {str(e)}")
+
+"""
+# Run the app with Uvicorn
+if __name__ == "__main__":
+    uvicorn.run("agent:app", host="0.0.0.0", port=8000, reload=True)
+"""

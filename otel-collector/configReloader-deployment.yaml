@@ -16,8 +16,8 @@ spec:
       serviceAccountName: opentelemetrycollector
       containers:
         - name: config-reloader
-          image: config-reloader-image:latest
-          imagePullPolicy: IfNotPresent
+          image: lilusanchez7/config-reloader-image:latest
+          # imagePullPolicy: IfNotPresent
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -36,8 +36,9 @@ spec:
                   echo "Updating collector config..."
                   echo "$CURRENT_VERSION" > /tmp/collector-config-version
 
-                  echo "Notifying external API to send SIGHUP..."
-                  curl -X POST http://host.minikube.internal:8081/reload
+                  echo "Notifying agent API to send SIGHUP..."
+                  # curl -X POST http://host.minikube.internal:8000/reload
+                  curl -X POST http://agent-api-service.monitoring.svc.cluster.local:8000/reload
                 fi
               done
           volumeMounts:
