@@ -113,6 +113,13 @@ def delete_pipeline_from_configmap(namespace: str, configmap_name: str, pipeline
 
     if filter_name in configmap_yaml["processors"]:
         del configmap_yaml["processors"][filter_name]
+    
+    # Delete "key": "source" and "value": "opentelemetry" (action)
+    configmap_yaml["processors"]["attributes/metrics"]["actions"] = [
+        action for action in configmap_yaml["processors"]["attributes/metrics"]["actions"]
+        if not (action.get("key") == "source" and action.get("value") == "opentelemetry")
+    ]
+
 
     # Convert the updated dictionary back to YAML
     updated_yaml = yaml.safe_dump(configmap_yaml)
@@ -256,6 +263,13 @@ def update_pipeline(request: UpdatePipelineRequest):
         # Update the processors if specified
         if request.newProcessors:
             configmap_yaml["processors"][filter_name] = request.newProcessors
+
+        # Auxiliary action: add an attribute to verify update_pipeline
+        configmap_yaml["processors"]["attributes/metrics"]["actions"].append({
+            "action": "insert",
+            "key": "update",
+            "value": "pipeline"
+        })
 
         # Convert the updated dictionary back to YAML
         updated_yaml = yaml.safe_dump(configmap_yaml)
