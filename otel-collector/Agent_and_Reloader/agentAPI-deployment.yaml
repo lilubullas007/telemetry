@@ -16,7 +16,7 @@ spec:
       serviceAccountName: opentelemetrycollector
       containers:
       - name: agent-api
-        image: lilusanchez7/agent-api:latest
+        image: ants-registry.inf.um.es/jlsanchezfdez/telemetry/agentapi:latest  # lilusanchez7/agent-api:latest
         ports:
         - containerPort: 8000
         env:

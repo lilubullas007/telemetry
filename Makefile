@@ -11,6 +11,7 @@ run:
 	kubectl apply -f "kubernetes-grafana/*.yaml"
 	kubectl apply -f "otel-collector/*.yaml"
 	kubectl apply -f "kubernetes-alertmanager/*.yaml"
+	# helm upgrade --install agent-api ./agent-api-chart
 
 run-php:
 	kubectl apply -f "generate-load/*.yaml"
