@@ -13,6 +13,24 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
 
+
+# This sets the configurable values for Config Reloader
+configReloader:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ants-registry.inf.um.es/jlsanchezfdez/telemetry/configreloader
+    tag: latest
+    pullPolicy: IfNotPresent
+  serviceAccountName: opentelemetrycollector
+  volumes:
+    - name: version-storage
+      emptyDir: {}
+  volumeMounts:
+    - mountPath: /tmp
+      name: version-storage
+  resources: {}
+
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.

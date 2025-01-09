@@ -1,0 +1,56 @@
+{{- if .Values.configReloader.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-reloader
+  namespace: monitoring
+  labels:
+    app: config-reloader
+    {{- include "agent-api-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.configReloader.replicas }}
+  selector:
+    matchLabels:
+      app: config-reloader
+  template:
+    metadata:
+      labels:
+        app: config-reloader
+        {{- include "agent-api-chart.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.configReloader.serviceAccountName }}
+      containers:
+        - name: config-reloader
+          image: "{{ .Values.configReloader.image.repository }}:{{ .Values.configReloader.image.tag }}"
+          imagePullPolicy: {{ .Values.configReloader.image.pullPolicy }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              while true; do
+                sleep 10;
+                CURRENT_VERSION="$(kubectl get configmap collector-config -n monitoring -o jsonpath='{.metadata.resourceVersion}')"
+                PREVIOUS_VERSION="$(cat /tmp/collector-config-version 2>/dev/null)"
+
+                echo "Current Version: $CURRENT_VERSION, Previous Version: $PREVIOUS_VERSION"
+
+                if [ -z "$PREVIOUS_VERSION" ]; then
+                  echo "Storing initial version without sending SIGHUP."
+                  echo "$CURRENT_VERSION" > /tmp/collector-config-version
+                elif [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+                  echo "Detected change in ConfigMap..."
+                  echo "Updating collector config..."
+                  echo "$CURRENT_VERSION" > /tmp/collector-config-version
+
+                  echo "Notifying agent API to send SIGHUP..."
+                  curl -X POST http://agent-api-agent-api-chart.monitoring.svc.cluster.local:8000/reload
+                fi
+              done
+          volumeMounts:
+          {{- toYaml .Values.configReloader.volumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.configReloader.volumes | nindent 8 }}
+      {{- with .Values.configReloader.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
