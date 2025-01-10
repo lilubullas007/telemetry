@@ -13,7 +13,6 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
 
-
 # This sets the configurable values for Config Reloader
 configReloader:
   enabled: true

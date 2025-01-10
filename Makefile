@@ -11,7 +11,7 @@ run:
 	kubectl apply -f "kubernetes-grafana/*.yaml"
 	kubectl apply -f "otel-collector/*.yaml"
 	kubectl apply -f "kubernetes-alertmanager/*.yaml"
-	# helm upgrade --install agent-api ./agent-api-chart
+	helm install agent-api agent-api-chart --namespace monitoring
 
 run-php:
 	kubectl apply -f "generate-load/*.yaml"
@@ -28,4 +28,5 @@ delete:
 	kubectl delete -f "kube-state-metrics-configs/*.yaml"
 	kubectl delete -f "kubernetes-grafana/*.yaml"
 	kubectl delete -f "otel-collector/*.yaml"
+	helm uninstall agent-api --namespace monitoring
 	kubectl delete -f "kubernetes-alertmanager/*.yaml"
